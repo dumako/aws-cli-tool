@@ -1,31 +1,27 @@
 #!/bin/bash
 
-cred=~/.aws/credentials         # credentials filepath
-conf=~/.aws/config              # config filepath
-varacckey=aws_access_key_id     # accesskey variable name
-varseckey=aws_secret_access_key # secretkey variable name
-vartoken=aws_session_token      # token variable name
-duration=$((60*60*24))          # 1 day
-region=ap-northeast-1           # the region of mfa profile
-profile=mfa                     # set target profile hame
-code=$1                         # MFA code from the parameter
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+mfa_conf=${SCRIPT_DIR}/aws-mfa.conf
 
-if [ -z "${AWS_SERIAL_NUMBER}" ]; then
-	cat <<-EOL
-	Please set your MFA device ARN to environment variable AWS_SERIAL_NUMBER.
-	Example:
-	echo "export AWS_SERIAL_NUMBER=arn:aws:iam::999999999999:mfa/username" >> .profile
-	source .profile
-	EOL
+# verify exec conditions
+if [ ! -e ${mfa_conf} ]; then
+  echo "Please set aws-mfa.conf in ${SCRIPT_DIR}."
   exit 1
 fi
 
-if [ -z "${code}" ]; then
+if [ -z "$1" ]; then
   echo '[Usage] ./set-aws-token.sh {displayed MFA token code}'
   exit 1
 fi
 
-sts=$(aws sts get-session-token --serial-number ${AWS_SERIAL_NUMBER} --duration-seconds ${duration} --token-code ${code})
+# set conf
+source ${mfa_conf}
+varacckey=aws_access_key_id     # accesskey variable name
+varseckey=aws_secret_access_key # secretkey variable name
+vartoken=aws_session_token      # token variable name
+code=$1                         # MFA code from the parameter
+
+sts=$(aws sts get-session-token --serial-number ${AWS_SERIAL_NUMBER} --duration-seconds ${DURATION} --token-code ${code})
 
 acckey=$(echo ${sts} | jq -r '.Credentials | .AccessKeyId' )
 seckey=$(echo ${sts} | jq -r '.Credentials | .SecretAccessKey' )
@@ -38,14 +34,14 @@ if [ -z ${token} ]; then
 fi
 
 # find target profile line
-profile_line=$(sed -n "/^\[${profile}\]$/=" ${cred})
+profile_line=$(sed -n "/^\[${MFA_PROFILE}\]$/=" ${CRED})
 if [ -n "$profile_line" ]; then
   # delete target profile
   s=a
   while [ "$s" != '[' ]
   do
-    sed -i "${profile_line}d" ${cred}
-    s=$(sed -n "${profile_line}p" ${cred})
+    sed -i "${profile_line}d" ${CRED}
+    s=$(sed -n "${profile_line}p" ${CRED})
     s=${s:0:1}
     if [ -z "$s" ]; then
       break
@@ -54,20 +50,20 @@ if [ -n "$profile_line" ]; then
 fi
 
 # add the credential to aws credentials
-cat <<EOL >> ${cred}
-[mfa]
+cat <<EOL >> ${CRED}
+[${MFA_PROFILE}]
 ${varacckey} = ${acckey}
 ${varseckey} = ${seckey}
 ${vartoken} = ${token}
 EOL
 
 # add config to aws config if it does not exist
-exists=$(sed -n "/^\[profile ${profile}\]$/=" ${conf})
+exists=$(sed -n "/^\[profile ${MFA_PROFILE}\]$/=" ${CONF})
 if [ -z "${exists}" ]; then
-	cat <<-EOL >> ${conf}
-	[profile ${profile}]
-	region = ${region}
-	output = json
+	cat <<-EOL >> ${CONF}
+	[profile ${MFA_PROFILE}]
+	region = ${REGION}
+	output = ${OUTPUT}
 	EOL
 fi
 
