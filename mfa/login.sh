@@ -6,7 +6,7 @@ code=$1 # MFA code from the parameter
 
 # verify exec conditions
 if [ ! -e ${mfa_conf} ]; then
-  echo "Please set aws-mfa.conf in ${SCRIPT_DIR}."
+  echo "Please set aws-mfa.conf in ${SCRIPT_DIR}/conf."
   exit 1
 fi
 
