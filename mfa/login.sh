@@ -31,10 +31,7 @@ if [ -z ${token} ]; then
   exit 1
 fi
 
-echo $sts
-exit
-
-. set-aws-conf.sh ${acckey} ${seckey} ${token}
+. ${SCRIPT_DIR}/src/set-aws-config.sh ${acckey} ${seckey} ${token} ${mfa_conf}
 
 echo "Expiration: ${expiration}"
 
