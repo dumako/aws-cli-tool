@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
-mfa_conf=${SCRIPT_DIR}/aws-mfa.conf
+mfa_conf=${SCRIPT_DIR}/conf/aws-mfa.conf
 code=$1 # MFA code from the parameter
 
 # verify exec conditions
@@ -32,6 +32,7 @@ if [ -z ${token} ]; then
 fi
 
 . ${SCRIPT_DIR}/src/set-aws-config.sh ${acckey} ${seckey} ${token} ${mfa_conf}
+. ${SCRIPT_DIR}/src/set-aws-env.sh ${acckey} ${seckey} ${token} ${SCRIPT_DIR}/conf
 
 echo "Expiration: ${expiration}"
 
