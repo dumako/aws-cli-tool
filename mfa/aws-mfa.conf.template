@@ -1,0 +1,10 @@
+CRED=~/.aws/credentials         # credentials filepath
+CONF=~/.aws/config              # config filepath
+LOGIN_PROFILE=default           # profile name of aws.configure you want to login
+MFA_PROFILE=mfa                 # name of the profile to be set
+REGION=ap-northeast-1           # region of the profile to be set
+OUTPUT=json                     # output of the profile to be set
+DURATION=$((60*60*24))          # session time = 1 day
+
+# arn of the mfa device
+AWS_SERIAL_NUMBER=arn:aws:iam::{AWS ACCOUNT ID}:mfa/{USER NAME}
