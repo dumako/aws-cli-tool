@@ -19,6 +19,7 @@ fi
 source ${mfa_conf}
 source ${SCRIPT_DIR}/src/get-aws-default-profile.sh ${mfa_conf}
 
+# get session token
 sts=$(aws sts get-session-token --serial-number ${AWS_SERIAL_NUMBER} --duration-seconds ${DURATION} --token-code ${code})
 
 acckey=$(echo ${sts} | jq -r '.Credentials | .AccessKeyId' )
@@ -31,9 +32,12 @@ if [ -z ${token} ]; then
   exit 1
 fi
 
+# set session token
 . ${SCRIPT_DIR}/src/set-aws-config.sh ${acckey} ${seckey} ${token} ${mfa_conf}
 . ${SCRIPT_DIR}/src/set-aws-env.sh ${acckey} ${seckey} ${token} ${SCRIPT_DIR}/conf
 
+# set environment variables
+source ${SCRIPT_DIR}/conf/.mfa-token
+
 echo "Expiration: ${expiration}"
 
-exit 0
